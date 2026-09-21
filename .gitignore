@@ -47,6 +47,7 @@ pip-delete-this-directory.txt
 # ==============================================================================
 # Data & Datasets (Prevent pushing large datasets to Git)
 # ==============================================================================
+data/
 data/raw/*
 data/processed/*
 data/interim/*
