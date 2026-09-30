@@ -135,3 +135,6 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# Course data is kept local only (licensed / not for the public repo)
+data/
