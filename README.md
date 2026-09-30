@@ -7,21 +7,20 @@ ICS553 Machine Learning Essentials, Ashesi University, 2026
 
 ## Abstract
 
-A limited consignment of 100,000 insecticide-treated nets (ITNs) must be allocated across Northern Ghana. We combine routine clinic records for 50 districts (2014-2017), the 2022 Malaria Indicator Survey (17,933 households in 618 clusters) and the DHS regional series (2003-2022) to decide where the nets should go and to measure how uncertain the estimates are. District case counts are over-dispersed (variance-to-mean ratio 77,183): a Poisson model places 1 of 50 districts inside its 95% range, while a Negative-Binomial model (α = 0.342) places 47. Ignoring the survey's village clustering makes the confidence interval about 22% too narrow. Preprocessing is fitted on training districts only, and a leakage audit quantifies the effect of pooled preprocessing. We rank districts by confirmed cases among people without a net and recommend allocating the nets to Wa, Bolgatanga, Garu-Tempane, Jirapa and Bawku, which raises coverage in each above 90%, past the WHO 80% target.
+A limited consignment of 100,000 insecticide-treated nets (ITNs) must be allocated across Northern Ghana. We combine routine clinic records, a national household survey and regional survey indicators to decide where the nets should go and to measure how uncertain the estimates are. District case counts are over-dispersed (variance-to-mean ratio 77,183): a Poisson model places 1 of 50 districts inside its 95% range, while a Negative-Binomial model (α = 0.342) places 47. Ignoring the survey's village clustering makes the confidence interval about 22% too narrow. Preprocessing is fitted on training districts only, and a leakage audit quantifies the effect of pooled preprocessing. We rank districts by confirmed cases among people without a net and recommend allocating the nets to Wa, Bolgatanga, Garu-Tempane, Jirapa and Bawku, which raises coverage in each above 90%, past the WHO 80% target.
 
 ---
 
 ## Contents
 
 1. [Research question](#1-research-question)
-2. [Data](#2-data)
-3. [Methods](#3-methods)
-4. [Results](#4-results)
-5. [Reproducing the results](#5-reproducing-the-results)
-6. [Repository structure](#6-repository-structure)
-7. [Limitations](#7-limitations)
-8. [Use of AI tools](#8-use-of-ai-tools)
-9. [Citation](#9-citation)
+2. [Methods](#2-methods)
+3. [Results](#3-results)
+4. [Reproducing the results](#4-reproducing-the-results)
+5. [Repository structure](#5-repository-structure)
+6. [Limitations](#6-limitations)
+7. [Use of AI tools](#7-use-of-ai-tools)
+8. [Citation](#8-citation)
 
 ---
 
@@ -31,22 +30,7 @@ Where should Ghana's limited supply of ITNs go, and how confident can we be in t
 
 ---
 
-## 2. Data
-
-| Source | Unit of analysis | Coverage | Role |
-|---|---|---|---|
-| Ghana Health Service routine clinic records | District, cumulative 2014-2017 | 50 districts (2014 Northern, Upper East and Upper West regions) | Response variable: confirmed malaria cases |
-| 2022 Ghana DHS / Malaria Indicator Survey | Household | 17,933 households, 618 clusters, 16 regions | Net ownership, cluster structure, sampling weights |
-| DHS subnational indicator series | Region × survey round | 16 regions, 2003-2022 | National benchmark: parasite prevalence, net coverage |
-| Ghana administrative boundaries | Region (admin 1), district (admin 2) | National | Maps |
-
-The clinic data uses Ghana's 2014 regions. After the 2018 reorganisation, the 50 districts sit in 5 of the 16 current regions (Northern, Savannah, North East, Upper East and Upper West); 11 regions have no district-level case data.
-
-**Access.** The data files are not distributed with this repository. They are part of the ICS553 course package. The MIS household survey is licensed health data and must be treated as confidential: do not redistribute it or upload it to any generative AI tool.
-
----
-
-## 3. Methods
+## 2. Methods
 
 **Distributions (Theme A).** We examine the response `positive_cases` for skew and over-dispersion, fit an intercept-only Poisson model by maximum likelihood (λ = sample mean), and compare it with a Negative-Binomial (NB2) model fitted in `statsmodels`, using log-likelihood, AIC, binned probability plots, Q-Q plots and each model's 95% range.
 
@@ -65,7 +49,7 @@ that is, confirmed cases among people without a net. The 100,000 nets are split 
 
 ---
 
-## 4. Results
+## 3. Results
 
 **Table 1. Poisson vs. Negative-Binomial fit to district case counts (n = 50).**
 
@@ -100,9 +84,9 @@ The tranche closes about 68% of the combined unprotected gap in these five distr
 
 ---
 
-## 5. Reproducing the results
+## 4. Reproducing the results
 
-### 5.1 Environment
+### 4.1 Environment
 
 Python 3.11 is required. Using conda:
 
@@ -120,51 +104,27 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` pins the versions used to produce the saved outputs: pandas 2.3.3, NumPy 2.4.6, SciPy 1.16.3, matplotlib 3.10.8, seaborn 0.13.2, statsmodels 0.15.0, scikit-learn 1.9.1, geopandas 1.2.0 and ipykernel 7.3.0.
+### 4.2 Running
 
-### 5.2 Data layout
+The notebook reads the course data files from a `data/` folder next to it. The data is not included in this repository.
 
-Place the course data files in `data/`, relative to the notebook:
-
-```
-data/
-├── ghana_district_cases.csv
-├── ghana_mis_sample.csv
-├── ghana_region_malaria.csv
-└── ghana_boundaries/
-    ├── gha_admin1.geojson
-    └── gha_admin2.geojson
-```
-
-These five files are the only inputs the notebook reads. `data/` is excluded from version control by `.gitignore`.
-
-### 5.3 Running
-
-Open `ghana_itn_allocation.ipynb` in Jupyter or VS Code, select the environment above as the kernel, and run all cells. A full run takes under a minute on a laptop (about 40 seconds in our test). Random seeds are fixed (`random_state=42` for the split, `np.random.seed(42)` for the bootstrap), so outputs match the saved ones.
-
-The following warnings are expected and do not affect the results: `Could not detect GDAL data files` (geopandas), `you may need to restart the kernel` (the `%pip` line in Task B1), and `not compatible with tight_layout` (allocation plots).
-
-### 5.4 Troubleshooting
-
-- `FileNotFoundError: data/...`: a data file is missing or misplaced; check the layout in 5.2.
-- `ModuleNotFoundError` for `statsmodels` or `geopandas`: the notebook is using a different interpreter; select the correct kernel and restart it.
-- Kernel crashes or `ImportError ... _cyutility` on import: NumPy or SciPy has been mixed between conda and pip installs; create a fresh environment and install only from `requirements.txt`.
+Open `ghana_itn_allocation.ipynb` in Jupyter or VS Code, select the environment above as the kernel, and run all cells. Random seeds are fixed, so the outputs match the saved ones.
 
 ---
 
-## 6. Repository structure
+## 5. Repository structure
 
 ```
 .
 ├── ghana_itn_allocation.ipynb   Analysis notebook, with saved outputs
 ├── requirements.txt             Pinned Python dependencies
 ├── README.md                    This file
-└── data/                        Course data (not distributed; see Section 2)
+└── data/                        Course data (not included)
 ```
 
 ---
 
-## 7. Limitations
+## 6. Limitations
 
 - **Temporal mismatch.** Net coverage is from the 2022 survey, while case counts cover 2014-2017.
 - **Regional coverage only.** All districts in a region share one coverage value, so within-region differences in net ownership are not captured.
@@ -175,13 +135,13 @@ The following warnings are expected and do not affect the results: `Could not de
 
 ---
 
-## 8. Use of AI tools
+## 7. Use of AI tools
 
 AI tools were used in line with the ICS553 course policy. Google Antigravity assisted with scikit-learn and statsmodels syntax, matplotlib layout and draft LaTeX derivations. Claude Code (Anthropic) assisted with environment setup, district boundary matching, the distribution map, notebook tidying and consistency checks between the notebook and the presentation. All code was run and checked by the team, every reported figure is traced to a notebook output, and interpretations and the final recommendation are the team's own. No MIS household records were uploaded to any AI tool. The full declaration is at the end of the notebook.
 
 ---
 
-## 9. Citation
+## 8. Citation
 
 ```bibtex
 @misc{group2_2026_itn,
